@@ -22,9 +22,12 @@ import { User } from './user/entities/user.entity';
         database: configService.get('DATABASE_NAME'),
         entities: [User],
         synchronize: true, // Set to false in production
-        ssl: {
-          rejectUnauthorized: false, // Required for cloud databases
-        },
+        ssl:
+          configService.get('DATABASE_SSL') === 'true'
+            ? {
+                rejectUnauthorized: false, // Required for cloud databases
+              }
+            : false,
       }),
       inject: [ConfigService],
     }),

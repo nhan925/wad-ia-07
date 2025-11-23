@@ -1,18 +1,19 @@
 # User Registration System - Frontend
 
-A modern, responsive user registration interface built with Next.js, React Hook Form, React Query, and shadcn/ui.
+A modern, responsive user registration interface built with Next.js 16, React 19, and shadcn/ui.
 
-## Features
+## ✨ Features
 
-- ✅ Modern UI with shadcn/ui components
-- ✅ Styled with Tailwind CSS v4
-- ✅ Form validation with React Hook Form
-- ✅ API state management with React Query
-- ✅ Client-side and server-side validation
-- ✅ Responsive design for all devices
-- ✅ Dark mode support
-- ✅ Type-safe with TypeScript
-- ✅ Native Next.js fetch API integration
+- ✅ **Modern UI**: Beautiful components with shadcn/ui
+- ✅ **Styled with Tailwind CSS v4**: Latest styling features
+- ✅ **Form Management**: React Hook Form with Zod validation
+- ✅ **API State**: React Query for efficient data fetching
+- ✅ **Real-time Validation**: Client-side and server-side
+- ✅ **Responsive Design**: Works on all devices
+- ✅ **Dark Mode**: Automatic theme detection
+- ✅ **Type-Safe**: Full TypeScript support
+- ✅ **Component Architecture**: Modular and reusable components
+- ✅ **Toast Notifications**: User feedback for actions
 
 ## Prerequisites
 
@@ -68,52 +69,115 @@ npm start
 - Form validation
 - Mock authentication feedback
 
-## Project Structure
+## 📁 Project Structure
 
 ```
-app/
-├── page.tsx              # Home page
-├── signup/
-│   └── page.tsx         # Sign up page
-├── login/
-│   └── page.tsx         # Login page
-├── layout.tsx           # Root layout with React Query provider
-└── globals.css          # Global styles
-components/
-├── ui/                  # shadcn/ui components
-│   ├── button.tsx
-│   ├── input.tsx
-│   ├── label.tsx
-│   ├── card.tsx
-│   └── form.tsx
-└── providers.tsx        # React Query provider
-lib/
-├── api.ts              # API client using fetch
-└── utils.ts            # Utility functions
+frontend/
+├── app/                        # Next.js App Router pages
+│   ├── page.tsx                # Home page
+│   ├── layout.tsx              # Root layout with providers
+│   ├── globals.css             # Global styles
+│   ├── signup/
+│   │   └── page.tsx            # Sign up page
+│   └── login/
+│       └── page.tsx            # Login page
+│
+├── components/                 # React components
+│   ├── home/                   # Home page components
+│   │   ├── hero-section.tsx    # Hero title and description
+│   │   ├── action-buttons.tsx  # Sign up/Login buttons
+│   │   ├── features-grid.tsx   # Features list
+│   │   ├── tech-stack.tsx      # Technology badges
+│   │   ├── footer-info.tsx     # Course information
+│   │   └── index.ts            # Barrel exports
+│   │
+│   ├── auth/                   # Authentication components
+│   │   ├── auth-layout.tsx     # Auth pages layout
+│   │   ├── email-field.tsx     # Email input field
+│   │   ├── password-field.tsx  # Password input with toggle
+│   │   ├── confirm-password-field.tsx
+│   │   ├── password-strength-indicator.tsx
+│   │   ├── password-tooltip.tsx
+│   │   ├── form-footer.tsx     # Links and submit button
+│   │   └── index.ts            # Barrel exports
+│   │
+│   ├── ui/                     # shadcn/ui components
+│   │   ├── button.tsx
+│   │   ├── card.tsx
+│   │   ├── form.tsx
+│   │   ├── input.tsx
+│   │   ├── label.tsx
+│   │   └── tooltip.tsx
+│   │
+│   └── providers.tsx           # React Query provider
+│
+├── lib/                        # Utilities and API
+│   ├── api.ts                  # API client with fetch
+│   └── utils.ts                # Utility functions
+│
+├── public/                     # Static assets
+├── Dockerfile                  # Docker image definition
+├── next.config.ts              # Next.js configuration
+├── tailwind.config.ts          # Tailwind CSS configuration
+├── components.json             # shadcn/ui configuration
+└── package.json                # Dependencies
 ```
 
-## Technologies Used
+## 🛠️ Technologies Used
 
-- **Next.js 16** - React framework with App Router
-- **React 19** - UI library
-- **TypeScript** - Type safety
-- **Tailwind CSS v4** - Styling
-- **shadcn/ui** - UI component library
-- **React Hook Form** - Form management and validation
-- **React Query** - Server state management
-- **Native Fetch API** - HTTP requests
+- **Next.js 16** - React framework with App Router and Server Components
+- **React 19** - Latest React with improved features
+- **TypeScript** - Type safety throughout
+- **Tailwind CSS v4** - Modern utility-first CSS
+- **shadcn/ui** - High-quality, accessible UI components
+- **React Hook Form** - Performant form management
+- **Zod** - TypeScript-first schema validation
+- **React Query** - Powerful data synchronization
+- **Sonner** - Beautiful toast notifications
+- **Lucide React** - Icon library
 
-## Form Validation Rules
+## 🎨 Component Architecture
+
+### Home Page Components (`components/home/`)
+
+Each section of the home page is extracted into its own component for better maintainability:
+
+- **HeroSection**: Hero title and description
+- **ActionButtons**: Sign up and login navigation buttons
+- **FeaturesGrid**: Features showcase with icons
+- **TechStack**: Technology badges display
+- **FooterInfo**: Course information footer
+
+### Auth Components (`components/auth/`)
+
+Reusable authentication form components:
+
+- **AuthLayout**: Consistent layout for auth pages
+- **EmailField**: Email input with validation
+- **PasswordField**: Password input with show/hide toggle
+- **ConfirmPasswordField**: Password confirmation with matching validation
+- **PasswordStrengthIndicator**: Visual password strength meter
+- **PasswordTooltip**: Password requirements tooltip
+- **FormFooter**: Form actions and navigation links
+
+## ✅ Form Validation Rules
 
 ### Email
-- Required field
-- Must be valid email format
-- Unique (validated by backend)
+- **Required**: Cannot be empty
+- **Format**: Must be valid email format (name@domain.com)
+- **Uniqueness**: Validated by backend (must not exist)
 
 ### Password
-- Required field
-- Minimum 6 characters
-- Must match confirm password (signup only)
+- **Required**: Cannot be empty
+- **Minimum Length**: 8 characters
+- **Uppercase**: At least 1 uppercase letter (A-Z)
+- **Lowercase**: At least 1 lowercase letter (a-z)
+- **Number**: At least 1 number (0-9)
+- **Special Character**: At least 1 special character (@$!%*?&)
+
+### Confirm Password (Sign Up only)
+- **Required**: Cannot be empty
+- **Match**: Must exactly match the password field
 
 ## API Integration
 
@@ -132,17 +196,69 @@ React Query handles:
 - Cache management
 - Optimistic updates
 
-## Learn More
+## 🐳 Docker Support
 
-To learn more about Next.js, take a look at the following resources:
+This frontend can be run with Docker:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# Build the image
+docker build -t frontend .
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Run the container
+docker run -p 3000:3000 \
+  -e NEXT_PUBLIC_API_URL=http://localhost:3001 \
+  frontend
+```
 
-## Deploy on Vercel
+Or use the docker-compose setup from the project root:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+# From project root
+docker-compose up -d
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🚀 Deployment
+
+### Vercel (Recommended)
+
+The easiest way to deploy:
+
+1. Push your code to GitHub
+2. Import project in [Vercel](https://vercel.com)
+3. Set environment variable:
+   - `NEXT_PUBLIC_API_URL`: Your backend API URL
+4. Deploy
+
+### Other Platforms
+
+- **Netlify**: Supports Next.js with automatic configuration
+- **Railway**: Deploy with Dockerfile
+- **Render**: Static site or Docker deployment
+- **Cloudflare Pages**: Fast edge deployment
+
+### Environment Variables for Production
+
+```env
+NEXT_PUBLIC_API_URL=https://your-backend-api.com
+```
+
+## 📚 Learn More
+
+### Next.js Resources
+- [Next.js Documentation](https://nextjs.org/docs) - Features and API
+- [Learn Next.js](https://nextjs.org/learn) - Interactive tutorial
+- [Next.js GitHub](https://github.com/vercel/next.js)
+
+### Component Libraries
+- [shadcn/ui Documentation](https://ui.shadcn.com)
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+- [React Hook Form](https://react-hook-form.com)
+- [TanStack Query](https://tanstack.com/query)
+
+## 🤝 Contributing
+
+This is an academic project (IA06 assignment). For improvements or suggestions, please contact the project maintainer.
+
+## 📄 License
+
+This project is for educational purposes as part of HCMUS Web Application Development coursework.

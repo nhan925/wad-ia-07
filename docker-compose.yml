@@ -1,46 +1,49 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database
-  postgres:
-    image: postgres:15-alpine
-    container_name: user-registration-db
+  db:
+    image: postgres:18.1-alpine
+    container_name: wad-ia06-db
+    hostname: db
     restart: unless-stopped
     env_file:
       - ./backend/.env
     environment:
-      POSTGRES_USER: ${DATABASE_USER:-postgres}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-postgres}
-      POSTGRES_DB: ${DATABASE_NAME:-user_registration_db}
-    ports:
-      - "5432:5432"
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: authen_db
+    expose:
+      - "5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-postgres}"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d authen_db"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   # Backend API (NestJS)
-  backend:
+  api:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: user-registration-api
+    container_name: wad-ia06-api
+    hostname: api
     restart: unless-stopped
-    env_file:
-      - ./backend/.env
     environment:
       NODE_ENV: production
-      DATABASE_HOST: postgres
+      DATABASE_HOST: db  # Use service name as hostname
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
       DATABASE_PORT: 5432
-    ports:
-      - "3001:3001"
+      DATABASE_NAME: authen_db
+      DATABASE_SSL: false
+      PORT: 3001
+      CORS_ORIGINS: http://web:3000,http://api:3001
+    expose:
+      - "3001"
     depends_on:
-      postgres:
+      db:
         condition: service_healthy
     networks:
       - app-network
@@ -52,23 +55,26 @@ services:
       start_period: 40s
 
   # Frontend (Next.js)
-  frontend:
+  web:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:3001
-    container_name: user-registration-app
+        # Client-side needs to use localhost when accessed from browser
+        NEXT_PUBLIC_API_URL: /api
+    container_name: wad-ia06-web
+    hostname: web
     restart: unless-stopped
     env_file:
       - ./frontend/.env
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_API_URL: http://localhost:3001
-    ports:
-      - "3000:3000"
+      # Server-side can use the service name to reach the API
+      NEXT_API_URL: http://api:3001
+      PORT: 3000
     depends_on:
-      - backend
+      api:
+        condition: service_healthy
     networks:
       - app-network
     healthcheck:
@@ -78,10 +84,27 @@ services:
       retries: 3
       start_period: 40s
 
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: wad-ia06-nginx
+    ports:
+      - "30080:80"
+      - "30443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - web
+      - api
+    networks:
+      - app-network
+
 networks:
   app-network:
+    name: wad-ia06-network
     driver: bridge
 
 volumes:
   postgres_data:
+    name: wad-ia06-postgres-data
     driver: local

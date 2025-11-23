@@ -21,7 +21,7 @@ export function FormFooter({
 }: FormFooterProps) {
   return (
     <CardFooter className="flex flex-col gap-4 px-0">
-      <Button type="submit" className="w-full" disabled={isLoading}>
+      <Button type="submit" className="w-full cursor-pointer" disabled={isLoading}>
         {isLoading ? loadingText : submitText}
       </Button>
       <p className="text-sm text-center text-muted-foreground">

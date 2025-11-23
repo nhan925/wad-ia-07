@@ -25,16 +25,18 @@
 
 A robust user registration API built with NestJS, TypeORM, and PostgreSQL.
 
-## Features
+## ✨ Features
 
-- ✅ User registration with email and password
-- ✅ Email uniqueness validation
-- ✅ Password hashing with bcrypt
-- ✅ TypeORM with PostgreSQL database
-- ✅ Input validation with class-validator
-- ✅ CORS enabled for frontend integration
-- ✅ Environment variable configuration
-- ✅ Comprehensive error handling
+- ✅ **User Registration**: Secure registration with email and password
+- ✅ **Email Validation**: Uniqueness check and format validation
+- ✅ **Password Security**: bcrypt hashing with 10 salt rounds
+- ✅ **Database**: PostgreSQL with TypeORM ORM
+- ✅ **Auto Schema**: TypeORM automatically creates database tables
+- ✅ **Input Validation**: class-validator for DTO validation
+- ✅ **CORS**: Enabled for frontend integration
+- ✅ **Environment Config**: Secure configuration management
+- ✅ **Error Handling**: Comprehensive error responses
+- ✅ **Docker Support**: Containerized for easy deployment
 
 ## Prerequisites
 
@@ -112,48 +114,87 @@ Register a new user.
 - `409 Conflict` - Email already exists
 - `500 Internal Server Error` - Server error
 
-## Database Schema
+## 📊 Database Schema
 
-### User Table
-| Column | Type | Constraints |
-|--------|------|-------------|
-| id | UUID | Primary Key |
-| email | VARCHAR | Unique, Required |
-| password | VARCHAR | Required (hashed) |
-| createdAt | TIMESTAMP | Auto-generated |
+### User Table (Auto-created by TypeORM)
 
-## Project Structure
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | UUID | Primary Key, Auto-generated | Unique user identifier |
+| email | TEXT | Unique, NOT NULL | User's email address |
+| password | TEXT | NOT NULL | Hashed password (bcrypt) |
+| createdAt | TIMESTAMPTZ | Auto-generated | Account creation timestamp |
+
+**Note**: The table is automatically created when the backend starts due to `synchronize: true` in TypeORM configuration. For production, use migrations instead.
+
+## 📁 Project Structure
 
 ```
-src/
-├── user/
-│   ├── dto/
-│   │   └── register-user.dto.ts    # Validation DTOs
-│   ├── entities/
-│   │   └── user.entity.ts          # TypeORM entity
-│   ├── user.controller.ts          # API endpoints
-│   ├── user.service.ts             # Business logic
-│   └── user.module.ts              # Module definition
-├── app.module.ts                   # Root module
-└── main.ts                         # Application entry point
+backend/
+├── src/
+│   ├── user/                       # User module
+│   │   ├── dto/
+│   │   │   └── register-user.dto.ts    # Data validation DTOs
+│   │   ├── entities/
+│   │   │   └── user.entity.ts          # TypeORM User entity
+│   │   ├── user.controller.ts          # HTTP endpoints
+│   │   ├── user.service.ts             # Business logic
+│   │   └── user.module.ts              # Module definition
+│   ├── app.module.ts                   # Root application module
+│   └── main.ts                         # Application entry point
+│
+├── test/                           # E2E tests
+│   ├── app.e2e-spec.ts
+│   └── jest-e2e.json
+│
+├── Dockerfile                      # Docker image definition
+├── .dockerignore                   # Docker ignore rules
+├── .env.example                    # Environment template
+├── nest-cli.json                   # NestJS CLI configuration
+├── tsconfig.json                   # TypeScript configuration
+└── package.json                    # Dependencies and scripts
 ```
 
-## Technologies Used
+## 🛠️ Technologies Used
 
-- **NestJS** - Progressive Node.js framework
-- **TypeORM** - ORM for TypeScript
-- **PostgreSQL** - Database
-- **bcrypt** - Password hashing
-- **class-validator** - Input validation
-- **class-transformer** - Object transformation
+- **NestJS** - Progressive Node.js framework with TypeScript
+- **TypeORM** - TypeScript ORM with Active Record pattern
+- **PostgreSQL** - Robust relational database
+- **bcrypt** - Industry-standard password hashing
+- **class-validator** - Decorator-based validation
+- **class-transformer** - Object to class transformation
+- **dotenv** - Environment variable management
+- **CORS** - Cross-origin resource sharing
 
-## Security Features
+## 🔒 Security Features
 
-- Passwords are hashed using bcrypt with 10 salt rounds
-- Email validation to prevent invalid formats
-- Password minimum length requirement (6 characters)
-- CORS configuration for secure cross-origin requests
-- Environment variables for sensitive data
+- **Password Hashing**: bcrypt with 10 salt rounds (configurable)
+- **Email Validation**: Format and uniqueness checking
+- **Password Requirements**: 
+  - Minimum 8 characters
+  - 1 uppercase letter
+  - 1 lowercase letter
+  - 1 number
+  - 1 special character (@$!%*?&)
+- **CORS Protection**: Configured for specific origins
+- **Environment Variables**: Sensitive data kept secure
+- **SQL Injection Prevention**: TypeORM parameterized queries
+- **Input Sanitization**: class-validator and class-transformer
+- **Error Handling**: No sensitive information leaked in errors
+
+## 🧪 Password Validation
+
+The password validation includes both backend and frontend checks:
+
+```typescript
+// Backend validation (register-user.dto.ts)
+@IsString()
+@MinLength(8)
+@Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/, {
+  message: 'Password must contain at least 8 characters, one uppercase, one lowercase, one number and one special character',
+})
+password: string;
+```
 
 ## Run tests
 
@@ -168,18 +209,105 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
-## Deployment
+## 🐳 Docker Support
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+This backend can be run with Docker:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Build the image
+docker build -t backend .
+
+# Run the container
+docker run -p 3001:3001 \
+  -e DATABASE_HOST=your-db-host \
+  -e DATABASE_PORT=5432 \
+  -e DATABASE_USER=postgres \
+  -e DATABASE_PASSWORD=your-password \
+  -e DATABASE_NAME=user_registration_db \
+  backend
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Or use the docker-compose setup from the project root:
+
+```bash
+# From project root
+docker-compose up -d
+```
+
+## 🚀 Deployment
+
+### Docker Deployment (Recommended)
+
+Use the provided Dockerfile and docker-compose.yml:
+
+```bash
+# Production build
+docker-compose up -d --build
+```
+
+### Cloud Platforms
+
+**Railway.app:**
+```bash
+# Push to GitHub and connect to Railway
+# Add PostgreSQL database
+# Deploy automatically
+```
+
+**Render.com:**
+- Create Web Service from Docker
+- Add PostgreSQL database
+- Set environment variables
+
+**Heroku:**
+```bash
+heroku create your-app-name
+heroku addons:create heroku-postgresql:hobby-dev
+git push heroku main
+```
+
+**AWS/Google Cloud/Azure:**
+- Use container services (ECS, Cloud Run, Container Instances)
+- Deploy with managed PostgreSQL
+- Set up load balancers and SSL
+
+### Production Considerations
+
+**Important for production:**
+
+1. **Database Configuration:**
+   ```typescript
+   // Set synchronize to false
+   synchronize: false,
+   
+   // Use migrations instead
+   migrations: ['dist/migrations/*.js'],
+   migrationsRun: true,
+   ```
+
+2. **Environment Variables:**
+   - Never commit `.env` file
+   - Use platform's secret management
+   - Set `NODE_ENV=production`
+
+3. **Security:**
+   - Enable HTTPS
+   - Add rate limiting
+   - Implement JWT authentication
+   - Add request validation
+   - Enable helmet for security headers
+
+4. **Performance:**
+   - Enable caching (Redis)
+   - Use connection pooling
+   - Enable compression
+   - Optimize database queries
+
+5. **Monitoring:**
+   - Set up logging (Winston, Pino)
+   - Add health check endpoints
+   - Monitor database performance
+   - Set up error tracking (Sentry)
 
 ## Resources
 
@@ -194,16 +322,52 @@ Check out a few resources that may come in handy when working with NestJS:
 - To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
 - Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
 
-## Support
+## 🤝 Contributing
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+This is an academic project (IA06 assignment). For improvements or suggestions, please contact the project maintainer.
 
-## Stay in touch
+## 📄 License
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+This project is for educational purposes as part of HCMUS Web Application Development coursework.
 
-## License
+## 📚 NestJS Resources
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- [NestJS Documentation](https://docs.nestjs.com) - Official documentation
+- [NestJS Discord](https://discord.gg/G7Qnnhy) - Community support
+- [NestJS Courses](https://courses.nestjs.com/) - Video courses
+- [TypeORM Documentation](https://typeorm.io/) - ORM documentation
+
+## 🆘 Troubleshooting
+
+### Tables not created
+```bash
+# Check backend logs for TypeORM synchronize messages
+npm run start:dev
+
+# If using Docker:
+docker-compose logs backend | grep -i "table"
+```
+
+### Database connection failed
+```bash
+# Verify PostgreSQL is running
+# Check .env credentials
+# Test connection:
+psql -h localhost -U postgres -d user_registration_db
+```
+
+### Port already in use
+```bash
+# Change PORT in .env or kill the process:
+# Windows:
+netstat -ano | findstr :3001
+taskkill /PID <PID> /F
+
+# Linux/Mac:
+lsof -i :3001
+kill -9 <PID>
+```
+
+---
+
+**Built with ❤️ using NestJS and TypeScript**
