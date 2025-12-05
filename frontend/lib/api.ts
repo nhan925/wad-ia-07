@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+// Use Next.js rewrite proxy to avoid cross-origin cookie issues on production
+const API_BASE_URL = typeof window !== 'undefined' 
+  ? '/api/backend'  // Client-side: use Next.js proxy
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'); // Server-side: direct
 
 // Create axios instance
 const axiosInstance = axios.create({
