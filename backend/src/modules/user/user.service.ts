@@ -30,7 +30,7 @@ export class UserService {
     createdAt: Date;
   }> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
-    
+
     if (!user) {
       throw new Error('User not found');
     }

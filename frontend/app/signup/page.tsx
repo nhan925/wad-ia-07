@@ -46,7 +46,7 @@ export default function SignUpPage() {
       });
       setTimeout(() => {
         router.push('/login');
-      }, 2000);
+      }, 1000);
     },
     onError: (error: any) => {
       const errorMessage = error.response?.data?.message || error.message || 'Registration failed';
