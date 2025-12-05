@@ -43,9 +43,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const initAuth = async () => {
       try {
         // Try to refresh token (will use HttpOnly cookie)
-        await api.refreshToken();
-        // If successful, fetch user profile
-        await refetch();
+        const data = await api.refreshToken();
+        // Set user data from refresh response
+        queryClient.setQueryData(['user'], data.user);
       } catch (error) {
         // No valid refresh token, user is not authenticated
         setAccessToken(null);
@@ -56,15 +56,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     initAuth();
-  }, [refetch]);
+  }, [queryClient]);
+
+  // Multi-tab synchronization: Listen for storage events (logout across tabs)
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      // Listen for logout signal from other tabs
+      if (event.key === 'logout-event') {
+        // Clear local state
+        setAccessToken(null);
+        queryClient.clear();
+        router.push('/login');
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [queryClient, router]);
 
   // Login mutation
   const loginMutation = useMutation({
     mutationFn: ({ email, password }: { email: string; password: string }) =>
       api.login({ email, password }),
-    onSuccess: async () => {
-      // Fetch user profile after login
-      await refetch();
+    onSuccess: async (data) => {
+      // Set user data from login response
+      queryClient.setQueryData(['user'], data.user);
       router.push('/dashboard');
     },
   });
@@ -75,15 +91,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     onSuccess: () => {
       // Clear all queries
       queryClient.clear();
+      
+      // Signal logout to other tabs
+      localStorage.setItem('logout-event', Date.now().toString());
+      localStorage.removeItem('logout-event');
+      
       router.push('/login');
     },
   });
 
   const login = async (email: string, password: string) => {
-    await loginMutation.mutateAsync({ email, password });
-    // Return the user data after refetch completes
-    const result = await refetch();
-    return result.data!;
+    const result = await loginMutation.mutateAsync({ email, password });
+    // Return the user data from login response
+    return result.user;
   };
 
   const logout = async () => {

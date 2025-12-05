@@ -19,16 +19,19 @@ This project implements a modern, secure authentication system featuring:
 ## 🎯 Features
 
 ### Backend (NestJS)
-- ✅ User registration endpoint (`POST /user/register`)
+- ✅ User registration endpoint (`POST /auth/register`) with name field
 - ✅ JWT authentication with access & refresh tokens
-- ✅ Login endpoint (`POST /auth/login`) with error handling for wrong password/user not found
-- ✅ Token refresh endpoint (`POST /auth/refresh`)
+- ✅ Login endpoint (`POST /auth/login`) with error handling and returns user info
+- ✅ Token refresh endpoint (`POST /auth/refresh`) returns new token and user info
 - ✅ Logout endpoint (`POST /auth/logout`) with token invalidation
-- ✅ Protected endpoint (`GET /auth/me`) with JWT guard
+- ✅ Protected endpoint (`GET /user/me`) with JWT guard
 - ✅ PostgreSQL database with TypeORM
+- ✅ Database migrations with TypeORM (no synchronize in production)
+- ✅ Seed data for testing (3 pre-configured users)
 - ✅ Refresh token management in database (one user can have many refresh tokens)
 - ✅ Password hashing with bcrypt
 - ✅ Email uniqueness validation
+- ✅ User name field support
 - ✅ Input validation with class-validator
 - ✅ HttpOnly cookies for secure refresh token storage
 - ✅ CORS enabled with credentials support
@@ -36,24 +39,27 @@ This project implements a modern, secure authentication system featuring:
 - ✅ Comprehensive error handling
 
 ### Frontend (Next.js)
-- ✅ Login page with React Hook Form validation
-- ✅ User registration page
-- ✅ Protected dashboard with user profile
+- ✅ Login page with React Hook Form validation and welcome message with user name
+- ✅ User registration page with name field
+- ✅ Protected dashboard with user profile (displays name, email, ID, join date)
+- ✅ Server-side proxy for authentication redirects (Next.js 16)
+- ✅ Generalized FormField component for all input types
 - ✅ Axios instance with automatic token attachment
 - ✅ Axios interceptors for automatic token refresh on 401 errors
 - ✅ Access token stored in memory (not localStorage)
 - ✅ Refresh token stored in HttpOnly cookies
 - ✅ React Query for authentication mutations and queries
 - ✅ Auth context for global authentication state
-- ✅ Protected route wrapper component
+- ✅ Server-side authentication checks (no page flash)
 - ✅ Automatic logout on refresh token expiration
 - ✅ Modern UI with shadcn/ui components
 - ✅ Tailwind CSS v4 styling
 - ✅ Responsive design
 - ✅ Dark mode support
 - ✅ TypeScript throughout
-- ✅ Real-time form validation
+- ✅ Real-time form validation with strength indicators
 - ✅ Comprehensive error handling with user-friendly messages
+- ✅ Toast notifications with sonner
 
 ## 🛠️ Tech Stack
 
@@ -61,13 +67,13 @@ This project implements a modern, secure authentication system featuring:
 - **Framework**: NestJS
 - **Authentication**: JWT (@nestjs/jwt, @nestjs/passport, passport-jwt)
 - **Database**: PostgreSQL
-- **ORM**: TypeORM (auto-creates tables via `synchronize: true`)
+- **ORM**: TypeORM with migrations (production-ready)
 - **Validation**: class-validator, class-transformer
 - **Security**: bcrypt for password hashing, HttpOnly cookies, JWT tokens
 - **Middleware**: cookie-parser for cookie handling
 - **Language**: TypeScript
 
-**Note:** Database tables (users & refresh_tokens) are automatically created when the backend starts. No manual SQL needed!
+**Note:** Database tables are created via TypeORM migrations. Migrations run automatically on startup with seed data included!
 
 ### Frontend
 - **Framework**: Next.js 16 (App Router)
@@ -86,11 +92,17 @@ This project implements a modern, secure authentication system featuring:
 wad-ia-07/
 ├── docker-compose.yml     # Docker orchestration
 ├── README.md              # This file
+├── EXPLANATION.md         # Detailed code explanation
 ├── backend/               # Backend (NestJS)
 │   ├── Dockerfile
 │   ├── src/
 │   │   ├── common/            # Shared resources
 │   │   │   └── entities/      # TypeORM entities (User, RefreshToken)
+│   │   ├── database/          # Database configuration
+│   │   │   ├── data-source.ts # TypeORM data source for migrations
+│   │   │   └── migrations/    # Database migrations
+│   │   │       ├── 1733400000000-InitialMigration.ts
+│   │   │       └── 1733400100000-SeedData.ts
 │   │   ├── modules/           # Feature modules
 │   │   │   ├── auth/          # Authentication module
 │   │   │   │   ├── dto/       # Auth DTOs (login, register)
@@ -138,10 +150,11 @@ wad-ia-07/
 This application implements a secure JWT-based authentication system with the following flow:
 
 ### 1. **User Registration**
-- User submits registration form with email and password
+- User submits registration form with name, email, and password
 - Backend validates input and checks for existing users
 - Password is hashed using bcrypt (10 salt rounds)
-- User is saved to the `users` table in the database
+- User is saved to the `users` table in the database with name field
+- Response returns user info (id, name, email, createdAt)
 
 ### 2. **Login Process**
 1. User submits login credentials (email + password)
@@ -153,19 +166,22 @@ This application implements a secure JWT-based authentication system with the fo
    - **Refresh Token**: Long-lived random token (7 days) stored in database
 4. Response includes:
    - Access token in response body (stored in memory by frontend)
+   - User info (id, name, email, createdAt) in response body
    - Refresh token in HttpOnly cookie (secure, not accessible by JavaScript)
+5. Frontend displays personalized welcome message with user's name
 
 ### 3. **Authenticated Requests**
 1. Axios interceptor automatically attaches access token to `Authorization` header
 2. Backend validates JWT token using Passport JWT strategy
-3. Protected routes (e.g., `/auth/me`) require valid access token
+3. Protected routes (e.g., `/user/me`) require valid access token
 
 ### 4. **Automatic Token Refresh**
 1. When access token expires, API returns `401 Unauthorized`
 2. Axios response interceptor catches the error
 3. Frontend automatically calls `/auth/refresh` with refresh token (from cookie)
 4. Backend validates refresh token from database
-5. New access token is generated and returned
+5. New access token and user info are generated and returned
+6. User data is updated in React Query cache
 6. Original request is retried with new access token
 7. If refresh token is invalid/expired:
    - User is logged out
@@ -249,7 +265,37 @@ docker compose logs -f
 - **Port 30443** for HTTPS traffic (when configured)
 - Internal services (web, api, db) are not exposed directly
 
-**Database tables are automatically created by TypeORM when the backend starts!**
+**Database migrations run automatically on startup with seed data included!**
+
+### 🗄️ Database Migrations
+
+This project uses TypeORM migrations for database schema management (production-ready approach):
+
+**Seed Users (automatically created):**
+- **admin@example.com** / Admin@123
+- **test@example.com** / User@123
+- **john@example.com** / Test@123
+
+**Migration Commands:**
+```bash
+# Run migrations manually (if needed)
+cd backend
+npm run migration:run
+
+# Revert last migration
+npm run migration:revert
+
+# Show migration status
+npm run migration:show
+
+# Generate new migration from entity changes
+npm run migration:generate -- src/database/migrations/MigrationName
+
+# Create empty migration
+npm run migration:create -- src/database/migrations/MigrationName
+```
+
+**Note:** Migrations are automatically executed on application startup with `migrationsRun: true`.
 
 #### Docker Commands
 
