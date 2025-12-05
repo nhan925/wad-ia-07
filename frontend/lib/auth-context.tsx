@@ -81,7 +81,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     onSuccess: async (data) => {
       // Set user data from login response
       queryClient.setQueryData(['user'], data.user);
-      router.push('/dashboard');
+      
+      // Use full page navigation to ensure cookies are properly set
+      window.location.href = '/dashboard';
     },
   });
 
