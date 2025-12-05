@@ -67,7 +67,7 @@ export class AuthService {
     const payload = { sub: user.id, email: user.email };
     return this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_SECRET'),
-      expiresIn: '15m', // Short-lived access token
+      expiresIn: '5m', // Short-lived access token
     });
   }
 

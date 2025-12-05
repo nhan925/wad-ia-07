@@ -42,4 +42,27 @@ export class UserService {
       createdAt: user.createdAt,
     };
   }
+
+  async updateName(userId: string, name: string): Promise<{
+    id: string;
+    name: string;
+    email: string;
+    createdAt: Date;
+  }> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    user.name = name;
+    await this.userRepository.save(user);
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      createdAt: user.createdAt,
+    };
+  }
 }

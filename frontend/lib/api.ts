@@ -116,4 +116,9 @@ export const api = {
     const response = await axiosInstance.get('/user/me');
     return response.data;
   },
+
+  updateName: async (name: string) => {
+    const response = await axiosInstance.patch('/user/name', { name });
+    return response.data;
+  },
 };

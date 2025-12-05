@@ -6,7 +6,7 @@ import { DashboardHeader, UserProfileCard, FeaturesCard } from '@/components/das
 import { toast } from 'sonner';
 
 export default function DashboardPage() {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshAuth } = useAuth();
 
   const handleLogout = async () => {
     try {
@@ -25,7 +25,7 @@ export default function DashboardPage() {
         <div className="container mx-auto px-4 py-12">
           <div className="max-w-4xl mx-auto">
             <DashboardHeader onLogout={handleLogout} />
-            <UserProfileCard user={user} />
+            <UserProfileCard user={user} onNameUpdated={refreshAuth} />
             <FeaturesCard />
           </div>
         </div>
