@@ -2,7 +2,7 @@ services:
   # PostgreSQL Database
   db:
     image: postgres:18.1-alpine
-    container_name: wad-ia06-db
+    container_name: wad-ia07-db
     hostname: db
     restart: unless-stopped
     env_file:
@@ -27,7 +27,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: wad-ia06-api
+    container_name: wad-ia07-api
     hostname: api
     restart: unless-stopped
     environment:
@@ -39,6 +39,7 @@ services:
       DATABASE_NAME: authen_db
       DATABASE_SSL: false
       PORT: 3001
+      JWT_SECRET: c2pkYWhqZmRhc2RoMTgyNzEyajNoajJoZGc4MTIzamRqc2FoYTgxMjNAKl4mXiMhXiVeI0A=
       CORS_ORIGINS: http://web:3000,http://api:3001
     expose:
       - "3001"
@@ -62,7 +63,7 @@ services:
       args:
         # Client-side needs to use localhost when accessed from browser
         NEXT_PUBLIC_API_URL: /api
-    container_name: wad-ia06-web
+    container_name: wad-ia07-web
     hostname: web
     restart: unless-stopped
     env_file:
@@ -87,7 +88,7 @@ services:
   # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
-    container_name: wad-ia06-nginx
+    container_name: wad-ia07-nginx
     ports:
       - "30080:80"
       - "30443:443"
@@ -101,10 +102,10 @@ services:
 
 networks:
   app-network:
-    name: wad-ia06-network
+    name: wad-ia07-network
     driver: bridge
 
 volumes:
   postgres_data:
-    name: wad-ia06-postgres-data
+    name: wad-ia07-postgres-data
     driver: local

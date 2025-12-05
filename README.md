@@ -1,52 +1,73 @@
-# 🚀 User Registration System (IA06)
+# 🚀 Secure Authentication System with JWT (IA07)
 
-A complete full-stack user registration system with a NestJS backend and Next.js frontend, fully containerized with Docker.
+A complete full-stack authentication system with JWT access/refresh tokens, NestJS backend, and Next.js frontend, fully containerized with Docker.
 
 ## 📋 Overview
 
-This project implements a modern user registration system featuring:
-- **Backend**: RESTful API built with NestJS, TypeORM, and PostgreSQL
+This project implements a modern, secure authentication system featuring:
+- **Backend**: RESTful API built with NestJS, TypeORM, PostgreSQL, and JWT
 - **Frontend**: Responsive React application using Next.js 16, React 19, shadcn/ui, and Tailwind CSS
-- **Authentication**: Secure password hashing with bcrypt
+- **Authentication**: JWT-based authentication with access tokens (memory) and refresh tokens (HttpOnly cookies)
+- **Token Management**: Automatic token refresh via Axios interceptors
+- **Security**: Secure password hashing with bcrypt, HttpOnly cookies for refresh tokens
+- **Protected Routes**: Client-side route guards with automatic redirection
 - **Validation**: Strong password requirements with both client-side and server-side validation
 - **Notifications**: Toast notifications for user feedback
-- **State Management**: React Query for efficient API communication
+- **State Management**: React Query for efficient API communication and authentication state
 - **Docker**: Full containerization with Docker Compose for easy deployment
 
 ## 🎯 Features
 
 ### Backend (NestJS)
 - ✅ User registration endpoint (`POST /user/register`)
+- ✅ JWT authentication with access & refresh tokens
+- ✅ Login endpoint (`POST /auth/login`) with error handling for wrong password/user not found
+- ✅ Token refresh endpoint (`POST /auth/refresh`)
+- ✅ Logout endpoint (`POST /auth/logout`) with token invalidation
+- ✅ Protected endpoint (`GET /auth/me`) with JWT guard
 - ✅ PostgreSQL database with TypeORM
+- ✅ Refresh token management in database (one user can have many refresh tokens)
 - ✅ Password hashing with bcrypt
 - ✅ Email uniqueness validation
 - ✅ Input validation with class-validator
-- ✅ CORS enabled for frontend
+- ✅ HttpOnly cookies for secure refresh token storage
+- ✅ CORS enabled with credentials support
 - ✅ Environment-based configuration
 - ✅ Comprehensive error handling
 
 ### Frontend (Next.js)
+- ✅ Login page with React Hook Form validation
+- ✅ User registration page
+- ✅ Protected dashboard with user profile
+- ✅ Axios instance with automatic token attachment
+- ✅ Axios interceptors for automatic token refresh on 401 errors
+- ✅ Access token stored in memory (not localStorage)
+- ✅ Refresh token stored in HttpOnly cookies
+- ✅ React Query for authentication mutations and queries
+- ✅ Auth context for global authentication state
+- ✅ Protected route wrapper component
+- ✅ Automatic logout on refresh token expiration
 - ✅ Modern UI with shadcn/ui components
 - ✅ Tailwind CSS v4 styling
-- ✅ React Hook Form for form management
-- ✅ React Query for API state
-- ✅ Native Next.js fetch API
 - ✅ Responsive design
 - ✅ Dark mode support
 - ✅ TypeScript throughout
 - ✅ Real-time form validation
+- ✅ Comprehensive error handling with user-friendly messages
 
 ## 🛠️ Tech Stack
 
 ### Backend
 - **Framework**: NestJS
+- **Authentication**: JWT (@nestjs/jwt, @nestjs/passport, passport-jwt)
 - **Database**: PostgreSQL
 - **ORM**: TypeORM (auto-creates tables via `synchronize: true`)
 - **Validation**: class-validator, class-transformer
-- **Security**: bcrypt for password hashing
+- **Security**: bcrypt for password hashing, HttpOnly cookies, JWT tokens
+- **Middleware**: cookie-parser for cookie handling
 - **Language**: TypeScript
 
-**Note:** Database tables are automatically created when the backend starts. No manual SQL needed!
+**Note:** Database tables (users & refresh_tokens) are automatically created when the backend starts. No manual SQL needed!
 
 ### Frontend
 - **Framework**: Next.js 16 (App Router)
@@ -54,25 +75,37 @@ This project implements a modern user registration system featuring:
 - **Styling**: Tailwind CSS v4
 - **Components**: shadcn/ui
 - **Forms**: React Hook Form
-- **API Client**: React Query + Native Fetch
+- **HTTP Client**: Axios with interceptors
+- **State Management**: React Query (@tanstack/react-query)
+- **Auth Management**: Custom AuthContext with React Context API
 - **Language**: TypeScript
 
 ## 📦 Project Structure
 
 ```
-wad-ia-06/
+wad-ia-07/
 ├── docker-compose.yml     # Docker orchestration
 ├── README.md              # This file
 ├── backend/               # Backend (NestJS)
 │   ├── Dockerfile
 │   ├── src/
-│   │   ├── user/              # User module
-│   │   │   ├── dto/           # Data transfer objects
-│   │   │   ├── entities/      # TypeORM entities
-│   │   │   ├── user.controller.ts
-│   │   │   ├── user.service.ts
-│   │   │   └── user.module.ts
+│   │   ├── common/            # Shared resources
+│   │   │   └── entities/      # TypeORM entities (User, RefreshToken)
+│   │   ├── modules/           # Feature modules
+│   │   │   ├── auth/          # Authentication module
+│   │   │   │   ├── dto/       # Auth DTOs (login, register)
+│   │   │   │   ├── guards/    # JWT auth guard
+│   │   │   │   ├── strategies/# JWT strategy
+│   │   │   │   ├── auth.controller.ts  # Auth endpoints
+│   │   │   │   ├── auth.service.ts     # Auth business logic
+│   │   │   │   └── auth.module.ts
+│   │   │   └── user/          # User module
+│   │   │       ├── user.controller.ts  # User-specific endpoints
+│   │   │       ├── user.service.ts     # User data access methods
+│   │   │       └── user.module.ts
 │   │   ├── app.module.ts
+│   │   ├── app.controller.ts
+│   │   ├── app.service.ts
 │   │   └── main.ts
 │   ├── .env.example
 │   └── package.json
@@ -82,18 +115,106 @@ wad-ia-06/
 │   ├── app/                   # Pages (App Router)
 │   │   ├── page.tsx           # Home page
 │   │   ├── login/             # Login page
-│   │   └── signup/            # Sign up page
+│   │   ├── signup/            # Sign up page
+│   │   └── dashboard/         # Protected dashboard
 │   ├── components/            # React components
 │   │   ├── home/              # Home page components
 │   │   ├── auth/              # Auth form components
-│   │   └── ui/                # shadcn/ui components
-│   ├── lib/                   # Utilities & API client
+│   │   ├── ui/                # shadcn/ui components
+│   │   └── protected-route.tsx # Route protection wrapper
+│   ├── lib/                   # Utilities
+│   │   ├── api.ts             # Axios instance with interceptors
+│   │   ├── auth-context.tsx   # Authentication context
+│   │   └── utils.ts
 │   └── package.json
 │
 └── nginx/                 # Nginx configuration
     └── conf.d/
         └── default.conf
 ```
+
+## 🔐 Authentication Flow
+
+This application implements a secure JWT-based authentication system with the following flow:
+
+### 1. **User Registration**
+- User submits registration form with email and password
+- Backend validates input and checks for existing users
+- Password is hashed using bcrypt (10 salt rounds)
+- User is saved to the `users` table in the database
+
+### 2. **Login Process**
+1. User submits login credentials (email + password)
+2. Backend validates credentials:
+   - Checks if user exists (returns `404` if not found)
+   - Verifies password with bcrypt (returns `401` if wrong password)
+3. On success, backend generates:
+   - **Access Token**: Short-lived JWT (15 minutes) containing user ID and email
+   - **Refresh Token**: Long-lived random token (7 days) stored in database
+4. Response includes:
+   - Access token in response body (stored in memory by frontend)
+   - Refresh token in HttpOnly cookie (secure, not accessible by JavaScript)
+
+### 3. **Authenticated Requests**
+1. Axios interceptor automatically attaches access token to `Authorization` header
+2. Backend validates JWT token using Passport JWT strategy
+3. Protected routes (e.g., `/auth/me`) require valid access token
+
+### 4. **Automatic Token Refresh**
+1. When access token expires, API returns `401 Unauthorized`
+2. Axios response interceptor catches the error
+3. Frontend automatically calls `/auth/refresh` with refresh token (from cookie)
+4. Backend validates refresh token from database
+5. New access token is generated and returned
+6. Original request is retried with new access token
+7. If refresh token is invalid/expired:
+   - User is logged out
+   - All tokens are cleared
+   - User is redirected to login page
+
+### 5. **Logout Process**
+1. User clicks logout button
+2. Frontend calls `/auth/logout`
+3. Backend:
+   - Deletes refresh token from database
+   - Clears refresh token cookie
+4. Frontend:
+   - Clears access token from memory
+   - Invalidates all React Query cache
+   - Redirects to login page
+
+### 6. **Protected Routes**
+- Dashboard and other protected pages use `ProtectedRoute` wrapper
+- Checks authentication status before rendering
+- Redirects unauthenticated users to login page
+- Shows loading state while checking authentication
+
+### 🔒 Security Measures
+
+1. **Access tokens in memory**: Not stored in localStorage (prevents XSS attacks)
+2. **Refresh tokens in HttpOnly cookies**: Not accessible by JavaScript (prevents XSS)
+3. **SameSite cookie policy**: Prevents CSRF attacks
+4. **Short-lived access tokens**: Minimizes damage if token is compromised
+5. **Database-backed refresh tokens**: Allows server-side invalidation and audit trail
+6. **Token revocation**: Tokens can be revoked without deletion (maintains audit history)
+7. **Revoked field in database**: Prevents reuse of revoked tokens
+8. **Secure cookie flag**: In production, cookies sent only over HTTPS
+9. **CORS with credentials**: Properly configured to allow cookies
+
+### 📊 Refresh Token Management
+
+The `refresh_tokens` table includes:
+- **token**: Unique refresh token string
+- **userId**: Reference to the user
+- **expiresAt**: Token expiration timestamp
+- **revoked**: Boolean flag for token revocation (default: false)
+- **createdAt**: Token creation timestamp
+
+**Token Revocation Features:**
+- `revokeToken(token)`: Revoke a specific refresh token
+- `revokeAllUserTokens(userId)`: Revoke all tokens for a user (useful for security incidents)
+- Revoked tokens are kept in database for audit purposes
+- Automatic check for revoked status during token refresh
 
 ## 🚀 Getting Started
 
@@ -189,7 +310,10 @@ docker compose restart [web|api|db|nginx]
    DATABASE_PASSWORD=postgres
    DATABASE_NAME=authen_db
    PORT=3001
+   JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
    ```
+   
+   **Important:** Change `JWT_SECRET` to a strong random string in production!
 
 5. **Start the backend server:**
    ```bash
@@ -228,26 +352,123 @@ docker compose restart [web|api|db|nginx]
 
 ## 📖 Usage
 
+### Complete Authentication Flow
+
 1. **Open your browser** and navigate to `http://localhost:30080`
 
-2. **From the home page**, you can:
-   - Click "Sign Up" to create a new account
-   - Click "Log In" to access the login page
-
-3. **Sign Up Process**:
+2. **Sign Up Process**:
+   - Click "Sign Up" from the home page
    - Enter your email address
    - Create a password (must meet requirements: 8+ characters, 1 uppercase, 1 lowercase, 1 number, 1 special character)
    - Confirm your password
    - Click "Sign Up" button
    - On success, you'll see a success toast and be redirected to the login page
 
-4. **Login Page** (UI only - mock implementation):
-   - Enter credentials
-   - Receive mock authentication feedback
+3. **Login Process**:
+   - Enter your registered email and password
+   - Click "Log In" button
+   - On success:
+     - Access token is stored in memory
+     - Refresh token is stored in HttpOnly cookie
+     - You're redirected to the dashboard
+
+4. **Using the Dashboard** (Protected Route):
+   - View your user profile information
+   - See your account details (email, user ID, creation date)
+   - Click "Logout" to end your session
+
+5. **Automatic Features**:
+   - **Token Refresh**: When your access token expires (after 15 minutes), the app automatically refreshes it using your refresh token
+   - **Session Persistence**: Refresh page and you'll stay logged in (refresh token valid for 7 days)
+   - **Auto Logout**: If refresh token expires, you'll be automatically logged out and redirected to login
+
+6. **Security Features in Action**:
+   - Try accessing `/dashboard` without logging in → Redirected to login
+   - Logout and try to access protected routes → Redirected to login
+   - Close browser and reopen within 7 days → Still logged in (refresh token persists)
 
 ## 🔌 API Endpoints
 
-### POST `/user/register`
+### Authentication Endpoints
+
+#### POST `/auth/login`
+
+Login with email and password.
+
+**Request:**
+```json
+{
+  "email": "user@example.com",
+  "password": "Password123!"
+}
+```
+
+**Success Response (200):**
+```json
+{
+  "message": "Login successful",
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+**Note:** Refresh token is set as HttpOnly cookie.
+
+**Error Responses:**
+- `404 Not Found` - User not found
+- `401 Unauthorized` - Invalid password
+- `400 Bad Request` - Invalid input format
+
+#### POST `/auth/refresh`
+
+Refresh the access token using the refresh token cookie.
+
+**Request:** No body required (uses HttpOnly cookie)
+
+**Success Response (200):**
+```json
+{
+  "message": "Token refreshed successfully",
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Error Responses:**
+- `401 Unauthorized` - Invalid or expired refresh token
+
+#### POST `/auth/logout`
+
+Logout and invalidate refresh token.
+
+**Request:** No body required
+
+**Success Response (200):**
+```json
+{
+  "message": "Logout successful"
+}
+```
+
+#### GET `/auth/me`
+
+Get current user profile (protected route).
+
+**Headers Required:**
+```
+Authorization: Bearer {accessToken}
+```
+
+**Success Response (200):**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "email": "user@example.com",
+  "createdAt": "2025-12-05T10:30:00.000Z"
+}
+```
+
+**Error Responses:**
+- `401 Unauthorized` - Invalid or expired access token
+
+#### POST `/auth/register`
 
 Register a new user account.
 
@@ -255,7 +476,7 @@ Register a new user account.
 ```json
 {
   "email": "user@example.com",
-  "password": "securepassword123"
+  "password": "Password123!"
 }
 ```
 
@@ -266,7 +487,7 @@ Register a new user account.
   "user": {
     "id": "550e8400-e29b-41d4-a716-446655440000",
     "email": "user@example.com",
-    "createdAt": "2025-11-22T10:30:00.000Z"
+    "createdAt": "2025-12-05T10:30:00.000Z"
   }
 }
 ```
@@ -298,12 +519,24 @@ Register a new user account.
 
 ## 🔒 Security Features
 
+### Authentication Security
+- **JWT Access Tokens**: Short-lived (15 minutes), stored in memory only
+- **Refresh Tokens**: Long-lived (7 days), stored in HttpOnly cookies
+- **HttpOnly Cookies**: Prevents JavaScript access, mitigating XSS attacks
+- **SameSite Cookie Policy**: Prevents CSRF attacks
+- **Secure Cookie Flag**: HTTPS-only in production
+- **Database-backed Refresh Tokens**: Server-side invalidation capability
+- **Automatic Token Refresh**: Seamless UX with Axios interceptors
+- **Protected Routes**: Client-side guards with server-side verification
+
+### General Security
 - **Password Hashing**: bcrypt with 10 salt rounds
-- **Input Validation**: Both client and server-side
-- **CORS Protection**: Configured for specific origins
+- **Input Validation**: Both client and server-side with class-validator
+- **CORS Protection**: Configured for specific origins with credentials support
 - **Environment Variables**: Sensitive data kept secure
 - **SQL Injection Prevention**: TypeORM parameterized queries
 - **XSS Protection**: React's built-in escaping
+- **Error Handling**: Specific error messages (User not found, Invalid password)
 
 ## 🎨 UI/UX Features
 

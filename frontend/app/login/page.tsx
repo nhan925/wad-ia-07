@@ -2,14 +2,13 @@
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useAuth } from '@/lib/auth-context';
 import {
   AuthLayout,
-  EmailField,
-  PasswordField,
+  FormField,
+  validations,
   FormFooter,
-  passwordValidation
 } from '@/components/auth';
 
 type LoginFormData = {
@@ -18,7 +17,7 @@ type LoginFormData = {
 };
 
 export default function LoginPage() {
-  const router = useRouter();
+  const { login, user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -30,26 +29,19 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
 
-    // Simulate login process (mock implementation)
-    setTimeout(() => {
+    try {
+      const loggedInUser = await login(data.email, data.password);
+      toast.success('Login successful!', {
+        description: `Welcome back, ${loggedInUser.name}!`,
+      });
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Login failed';
+      toast.error('Login failed', {
+        description: errorMessage,
+      });
+    } finally {
       setIsLoading(false);
-      
-      // Mock success response
-      if (data.email && data.password) {
-        toast.success('Login successful!', {
-          description: `Welcome back, ${data.email}`,
-        });
-        
-        // Simulate redirect after successful login
-        setTimeout(() => {
-          router.push('/');
-        }, 1500);
-      } else {
-        toast.error('Login failed', {
-          description: 'Invalid credentials. Please try again.',
-        });
-      }
-    }, 1000);
+    }
   };
 
   return (
@@ -59,13 +51,26 @@ export default function LoginPage() {
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-4">
-          <EmailField register={register} errors={errors} />
-          
-          <PasswordField
+          <FormField
+            id="email"
+            name="email"
+            label="Email"
+            type="email"
+            placeholder="your.email@example.com"
             register={register}
             errors={errors}
-            showTooltip
-            validation={passwordValidation}
+            validation={validations.email}
+          />
+          
+          <FormField
+            id="password"
+            name="password"
+            label="Password"
+            type="password"
+            placeholder="Enter your password"
+            register={register}
+            errors={errors}
+            validation={{ required: 'Password is required' }}
           />
         </div>
 

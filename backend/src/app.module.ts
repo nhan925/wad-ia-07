@@ -3,8 +3,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { UserModule } from './user/user.module';
-import { User } from './user/entities/user.entity';
+import { UserModule } from './modules/user/user.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { User, RefreshToken } from './common/entities';
 
 @Module({
   imports: [
@@ -20,8 +21,11 @@ import { User } from './user/entities/user.entity';
         username: configService.get('DATABASE_USER'),
         password: configService.get('DATABASE_PASSWORD'),
         database: configService.get('DATABASE_NAME'),
-        entities: [User],
-        synchronize: true, // Set to false in production
+        entities: [User, RefreshToken],
+        migrations: ['dist/database/migrations/*.js'],
+        migrationsRun: true, // Automatically run migrations on startup
+        migrationsTableName: 'migrations',
+        synchronize: false, // Never use synchronize in production
         ssl:
           configService.get('DATABASE_SSL') === 'true'
             ? {
@@ -32,6 +36,7 @@ import { User } from './user/entities/user.entity';
       inject: [ConfigService],
     }),
     UserModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

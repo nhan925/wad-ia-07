@@ -8,15 +8,17 @@ import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import {
   AuthLayout,
-  EmailField,
-  PasswordField,
-  ConfirmPasswordField,
+  FormField,
+  validations,
   FormFooter,
-  passwordValidation,
+  PasswordStrengthIndicator,
+  calculatePasswordStrength,
+  PasswordTooltip,
   type PasswordStrength,
 } from '@/components/auth';
 
 type RegisterFormData = {
+  name: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -46,15 +48,17 @@ export default function SignUpPage() {
         router.push('/login');
       }, 2000);
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || 'Registration failed';
       toast.error('Registration failed', {
-        description: error.message,
+        description: Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage,
       });
     },
   });
 
   const onSubmit = (data: RegisterFormData) => {
     registerMutation.mutate({
+      name: data.name,
       email: data.email,
       password: data.password,
     });
@@ -67,23 +71,55 @@ export default function SignUpPage() {
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-4">
-          <EmailField register={register} errors={errors} />
-          
-          <PasswordField
+          <FormField
+            id="name"
+            name="name"
+            label="Full Name"
+            type="text"
+            placeholder="John Doe"
             register={register}
             errors={errors}
-            showTooltip
-            showStrength
-            passwordValue={password}
-            passwordStrength={passwordStrength}
-            onPasswordChange={setPasswordStrength}
-            validation={passwordValidation}
+            validation={validations.name}
+          />
+
+          <FormField
+            id="email"
+            name="email"
+            label="Email"
+            type="email"
+            placeholder="your.email@example.com"
+            register={register}
+            errors={errors}
+            validation={validations.email}
           />
           
-          <ConfirmPasswordField
+          <FormField
+            id="password"
+            name="password"
+            label="Password"
+            type="password"
+            placeholder="Enter your password"
             register={register}
             errors={errors}
-            getValues={getValues}
+            validation={validations.password}
+            labelExtra={<PasswordTooltip />}
+            onChange={(e) => setPasswordStrength(calculatePasswordStrength(e.target.value))}
+            helperText={
+              password && passwordStrength && (
+                <PasswordStrengthIndicator strength={passwordStrength} />
+              )
+            }
+          />
+          
+          <FormField
+            id="confirmPassword"
+            name="confirmPassword"
+            label="Confirm Password"
+            type="password"
+            placeholder="Confirm your password"
+            register={register}
+            errors={errors}
+            validation={validations.confirmPassword(getValues)}
           />
         </div>
 
