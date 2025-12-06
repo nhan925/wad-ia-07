@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface User {
   id: string;
@@ -21,7 +22,26 @@ interface UserProfileCardProps {
 export function UserProfileCard({ user, onNameUpdated }: UserProfileCardProps) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [newName, setNewName] = useState('');
-  const [isUpdating, setIsUpdating] = useState(false);
+  const queryClient = useQueryClient();
+
+  const updateNameMutation = useMutation({
+    mutationFn: (name: string) => api.updateName(name),
+    onSuccess: (data) => {
+      // Update the user cache with the new data
+      queryClient.setQueryData(['user'], data);
+      toast.success('Name updated successfully!');
+      setIsEditingName(false);
+      setNewName('');
+      if (onNameUpdated) {
+        onNameUpdated();
+      }
+    },
+    onError: (error: any) => {
+      toast.error('Failed to update name', {
+        description: error.response?.data?.message || error.message,
+      });
+    },
+  });
 
   const handleStartEdit = () => {
     setNewName(user?.name || '');
@@ -39,22 +59,7 @@ export function UserProfileCard({ user, onNameUpdated }: UserProfileCardProps) {
       return;
     }
 
-    setIsUpdating(true);
-    try {
-      await api.updateName(newName);
-      toast.success('Name updated successfully!');
-      setIsEditingName(false);
-      setNewName('');
-      if (onNameUpdated) {
-        onNameUpdated();
-      }
-    } catch (error: any) {
-      toast.error('Failed to update name', {
-        description: error.response?.data?.message || error.message,
-      });
-    } finally {
-      setIsUpdating(false);
-    }
+    updateNameMutation.mutate(newName);
   };
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -99,12 +104,12 @@ export function UserProfileCard({ user, onNameUpdated }: UserProfileCardProps) {
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   className="h-8"
-                  disabled={isUpdating}
+                  disabled={updateNameMutation.isPending}
                   autoFocus
                 />
                 <button
                   onClick={handleSave}
-                  disabled={isUpdating}
+                  disabled={updateNameMutation.isPending}
                   className="p-1 hover:bg-green-100 dark:hover:bg-green-900 rounded transition-colors"
                   title="Save"
                 >
@@ -112,7 +117,7 @@ export function UserProfileCard({ user, onNameUpdated }: UserProfileCardProps) {
                 </button>
                 <button
                   onClick={handleCancelEdit}
-                  disabled={isUpdating}
+                  disabled={updateNameMutation.isPending}
                   className="p-1 hover:bg-red-100 dark:hover:bg-red-900 rounded transition-colors"
                   title="Cancel"
                 >
