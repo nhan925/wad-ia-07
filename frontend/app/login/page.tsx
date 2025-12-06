@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth-context';
+import PublicRoute from '@/components/public-route';
 import {
   AuthLayout,
   FormField,
@@ -17,7 +18,7 @@ type LoginFormData = {
 };
 
 export default function LoginPage() {
-  const { login, user } = useAuth();
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -45,6 +46,7 @@ export default function LoginPage() {
   };
 
   return (
+    <PublicRoute>
     <AuthLayout
       title="Welcome back"
       description="Enter your credentials to access your account"
@@ -84,5 +86,6 @@ export default function LoginPage() {
         />
       </form>
     </AuthLayout>
+    </PublicRoute>
   );
 }

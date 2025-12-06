@@ -6,6 +6,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
+import PublicRoute from '@/components/public-route';
 import {
   AuthLayout,
   FormField,
@@ -65,6 +66,7 @@ export default function SignUpPage() {
   };
 
   return (
+    <PublicRoute>
     <AuthLayout
       title="Create an account"
       description="Enter your information to create your account"
@@ -133,5 +135,6 @@ export default function SignUpPage() {
         />
       </form>
     </AuthLayout>
+    </PublicRoute>
   );
 }

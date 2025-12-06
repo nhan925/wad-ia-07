@@ -11,8 +11,8 @@ export class InitialMigration1733400000000 implements MigrationInterface {
         "name" text NOT NULL,
         "email" text NOT NULL,
         "password" text NOT NULL,
-        "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
-        "updatedAt" TIMESTAMP NOT NULL DEFAULT now(),
+        "createdAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
+        "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
         CONSTRAINT "UQ_users_email" UNIQUE ("email"),
         CONSTRAINT "PK_users_id" PRIMARY KEY ("id")
       )
@@ -24,9 +24,9 @@ export class InitialMigration1733400000000 implements MigrationInterface {
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "token" text NOT NULL,
         "userId" uuid NOT NULL,
-        "expiresAt" TIMESTAMP NOT NULL,
+        "expiresAt" TIMESTAMPTZ NOT NULL,
         "revoked" boolean NOT NULL DEFAULT false,
-        "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
+        "createdAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
         CONSTRAINT "UQ_refresh_tokens_token" UNIQUE ("token"),
         CONSTRAINT "PK_refresh_tokens_id" PRIMARY KEY ("id")
       )

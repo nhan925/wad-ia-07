@@ -30,10 +30,12 @@ async function bootstrap() {
 
   // Swagger setup
   const config = new DocumentBuilder()
-    .setTitle('WAD IA-06 API')
-    .setDescription('API documentation for WAD IA-06 project')
+    .setTitle('WAD IA-07 API')
+    .setDescription('API documentation for WAD IA-07 project')
     .setVersion('1.0')
+    .addTag('auth')
     .addTag('users')
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);

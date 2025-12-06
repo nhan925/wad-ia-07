@@ -3,27 +3,27 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { Loader } from './ui/loader';
+import { Loader } from '@/components/ui/loader';
 
-interface ProtectedRouteProps {
+interface PublicRouteProps {
   children: React.ReactNode;
 }
 
-export default function ProtectedRoute({ children }: ProtectedRouteProps) {
+export default function PublicRoute({ children }: PublicRouteProps) {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/login');
+    if (!isLoading && isAuthenticated) {
+      router.push('/dashboard');
     }
   }, [isAuthenticated, isLoading, router]);
 
   if (isLoading) {
     return <Loader fullScreen />;
-  }
-  
-  if (!isAuthenticated) {
+  }   
+    
+  if (isAuthenticated) {
     return null;
   }
 

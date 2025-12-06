@@ -49,7 +49,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (error) {
         // No valid refresh token, user is not authenticated
         setAccessToken(null);
-        // This is fine, middleware handles redirects
       } finally {
         setIsInitialized(true);
       }

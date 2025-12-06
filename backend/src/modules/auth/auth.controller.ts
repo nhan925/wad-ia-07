@@ -74,17 +74,26 @@ export class AuthController {
   @ApiOperation({ summary: 'Refresh access token' })
   @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
   @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
-  async refresh(@Req() request: Request) {
+  async refresh(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ) {
     const refreshToken = request.cookies?.refreshToken;
 
-    const { accessToken, user } =
-      await this.authService.refreshAccessToken(refreshToken);
+    try {
+      const { accessToken, user } =
+        await this.authService.refreshAccessToken(refreshToken);
 
-    return {
-      message: 'Token refreshed successfully',
-      accessToken,
-      user,
-    };
+      return {
+        message: 'Token refreshed successfully',
+        accessToken,
+        user,
+      };
+    } catch (error) {
+      // Clear invalid refresh token cookie
+      response.clearCookie('refreshToken');
+      throw error;
+    }
   }
 
   @Post('logout')

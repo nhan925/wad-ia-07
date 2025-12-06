@@ -1,14 +1,15 @@
 # 🚀 Secure Authentication System with JWT (IA07)
 
-A complete full-stack authentication system with JWT access/refresh tokens, NestJS backend, and Next.js frontend, fully containerized with Docker.
+A complete full-stack authentication system with JWT access/refresh tokens, NestJS backend, Next.js frontend, and user profile management, fully containerized with Docker.
 
 ## 📋 Overview
 
 This project implements a modern, secure authentication system featuring:
 - **Backend**: RESTful API built with NestJS, TypeORM, PostgreSQL, and JWT
 - **Frontend**: Responsive React application using Next.js 16, React 19, shadcn/ui, and Tailwind CSS
-- **Authentication**: JWT-based authentication with access tokens (memory) and refresh tokens (HttpOnly cookies)
+- **Authentication**: JWT-based authentication with access tokens (5 min, memory) and refresh tokens (7 days, HttpOnly cookies)
 - **Token Management**: Automatic token refresh via Axios interceptors
+- **User Profile Management**: Update user name with real-time dashboard updates
 - **Security**: Secure password hashing with bcrypt, HttpOnly cookies for refresh tokens
 - **Protected Routes**: Client-side route guards with automatic redirection
 - **Validation**: Strong password requirements with both client-side and server-side validation
@@ -25,6 +26,7 @@ This project implements a modern, secure authentication system featuring:
 - ✅ Token refresh endpoint (`POST /auth/refresh`) returns new token and user info
 - ✅ Logout endpoint (`POST /auth/logout`) with token invalidation
 - ✅ Protected endpoint (`GET /user/me`) with JWT guard
+- ✅ User profile update endpoint (`PATCH /user/name`) for updating user names
 - ✅ PostgreSQL database with TypeORM
 - ✅ Database migrations with TypeORM (no synchronize in production)
 - ✅ Seed data for testing (3 pre-configured users)
@@ -42,6 +44,7 @@ This project implements a modern, secure authentication system featuring:
 - ✅ Login page with React Hook Form validation and welcome message with user name
 - ✅ User registration page with name field
 - ✅ Protected dashboard with user profile (displays name, email, ID, join date)
+- ✅ User profile name update with real-time UI updates
 - ✅ Server-side proxy for authentication redirects (Next.js 16)
 - ✅ Generalized FormField component for all input types
 - ✅ Axios instance with automatic token attachment
@@ -92,7 +95,6 @@ This project implements a modern, secure authentication system featuring:
 wad-ia-07/
 ├── docker-compose.yml     # Docker orchestration
 ├── README.md              # This file
-├── EXPLANATION.md         # Detailed code explanation
 ├── backend/               # Backend (NestJS)
 │   ├── Dockerfile
 │   ├── src/
@@ -162,7 +164,7 @@ This application implements a secure JWT-based authentication system with the fo
    - Checks if user exists (returns `404` if not found)
    - Verifies password with bcrypt (returns `401` if wrong password)
 3. On success, backend generates:
-   - **Access Token**: Short-lived JWT (15 minutes) containing user ID and email
+   - **Access Token**: Short-lived JWT (5 minutes) containing user ID and email
    - **Refresh Token**: Long-lived random token (7 days) stored in database
 4. Response includes:
    - Access token in response body (stored in memory by frontend)
@@ -256,6 +258,7 @@ docker compose logs -f
 # Access the application:
 # - Application: http://localhost:30080
 # - API Endpoint: http://localhost:30080/api
+# - API Documentation (Swagger): http://localhost:30080/api/docs
 # - Frontend: Served through nginx
 # - Backend: Served through nginx at /api
 ```
@@ -272,9 +275,9 @@ docker compose logs -f
 This project uses TypeORM migrations for database schema management (production-ready approach):
 
 **Seed Users (automatically created):**
-- **admin@example.com** / Admin@123
-- **test@example.com** / User@123
-- **john@example.com** / Test@123
+- **Admin User** - admin@example.com / Admin@123
+- **Test User** - test@example.com / User@123
+- **John Doe** - john@example.com / Test@123
 
 **Migration Commands:**
 ```bash
@@ -424,7 +427,7 @@ docker compose restart [web|api|db|nginx]
    - Click "Logout" to end your session
 
 5. **Automatic Features**:
-   - **Token Refresh**: When your access token expires (after 15 minutes), the app automatically refreshes it using your refresh token
+   - **Token Refresh**: When your access token expires (after 5 minutes), the app automatically refreshes it using your refresh token
    - **Session Persistence**: Refresh page and you'll stay logged in (refresh token valid for 7 days)
    - **Auto Logout**: If refresh token expires, you'll be automatically logged out and redirected to login
 
@@ -434,6 +437,8 @@ docker compose restart [web|api|db|nginx]
    - Close browser and reopen within 7 days → Still logged in (refresh token persists)
 
 ## 🔌 API Endpoints
+
+**API Documentation**: Interactive Swagger documentation is available at `http://localhost:30080/api/docs` (Docker) or `http://localhost:3001/docs` (local development).
 
 ### Authentication Endpoints
 
@@ -452,8 +457,13 @@ Login with email and password.
 **Success Response (200):**
 ```json
 {
-  "message": "Login successful",
-  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "John Doe",
+    "email": "user@example.com",
+    "createdAt": "2025-12-05T10:30:00.000Z"
+  }
 }
 ```
 **Note:** Refresh token is set as HttpOnly cookie.
@@ -472,8 +482,13 @@ Refresh the access token using the refresh token cookie.
 **Success Response (200):**
 ```json
 {
-  "message": "Token refreshed successfully",
-  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "John Doe",
+    "email": "user@example.com",
+    "createdAt": "2025-12-05T10:30:00.000Z"
+  }
 }
 ```
 
@@ -493,7 +508,7 @@ Logout and invalidate refresh token.
 }
 ```
 
-#### GET `/auth/me`
+#### GET `/user/me`
 
 Get current user profile (protected route).
 
@@ -506,6 +521,7 @@ Authorization: Bearer {accessToken}
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "John Doe",
   "email": "user@example.com",
   "createdAt": "2025-12-05T10:30:00.000Z"
 }
@@ -514,6 +530,36 @@ Authorization: Bearer {accessToken}
 **Error Responses:**
 - `401 Unauthorized` - Invalid or expired access token
 
+#### PATCH `/user/name`
+
+Update user's name (protected route).
+
+**Headers Required:**
+```
+Authorization: Bearer {accessToken}
+```
+
+**Request:**
+```json
+{
+  "name": "Jane Doe"
+}
+```
+
+**Success Response (200):**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "Jane Doe",
+  "email": "user@example.com",
+  "createdAt": "2025-12-05T10:30:00.000Z"
+}
+```
+
+**Error Responses:**
+- `401 Unauthorized` - Invalid or expired access token
+- `400 Bad Request` - Invalid name format
+
 #### POST `/auth/register`
 
 Register a new user account.
@@ -521,6 +567,7 @@ Register a new user account.
 **Request:**
 ```json
 {
+  "name": "John Doe",
   "email": "user@example.com",
   "password": "Password123!"
 }
@@ -529,12 +576,10 @@ Register a new user account.
 **Success Response (201):**
 ```json
 {
-  "message": "User registered successfully",
-  "user": {
-    "id": "550e8400-e29b-41d4-a716-446655440000",
-    "email": "user@example.com",
-    "createdAt": "2025-12-05T10:30:00.000Z"
-  }
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "John Doe",
+  "email": "user@example.com",
+  "createdAt": "2025-12-05T10:30:00.000Z"
 }
 ```
 
@@ -544,6 +589,11 @@ Register a new user account.
 - `500 Internal Server Error` - Server error
 
 ## ✅ Validation Rules
+
+### Name
+- Required field
+- Must be a non-empty string
+- Used for user profile display
 
 ### Email
 - Required field
@@ -605,22 +655,22 @@ Register a new user account.
 
 **2. Register via API (curl):**
 ```bash
-curl -X POST http://localhost:30080/api/user/register \
+curl -X POST http://localhost:30080/api/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"Test@1234"}'
+  -d '{"name":"Test User","email":"test@example.com","password":"Test@1234"}'
 ```
 
 **3. Register via API (PowerShell):**
 ```powershell
-Invoke-RestMethod -Uri "http://localhost:30080/api/user/register" `
+Invoke-RestMethod -Uri "http://localhost:30080/api/auth/register" `
   -Method POST `
   -ContentType "application/json" `
-  -Body '{"email":"test@example.com","password":"Test@1234"}'
+  -Body '{"name":"Test User","email":"test@example.com","password":"Test@1234"}'
 ```
 
 **4. Verify User in Database:**
 ```bash
-docker compose exec db psql -U postgres -d authen_db -c "SELECT id, email, \"createdAt\" FROM users;"
+docker compose exec db psql -U postgres -d authen_db -c "SELECT id, name, email, \"createdAt\" FROM users;"
 ```
 
 ### Backend Unit Tests
@@ -653,7 +703,7 @@ Client → nginx:30080 → web:3000 (Next.js)
 
 **Nginx Reverse Proxy**
 - Image: `nginx:alpine`
-- Container: `wad-ia06-nginx`
+- Container: `wad-ia07-nginx`
 - External Ports: `30080` (HTTP), `30443` (HTTPS)
 - Routes `/api/*` requests to backend
 - Routes `/` requests to frontend
@@ -661,15 +711,15 @@ Client → nginx:30080 → web:3000 (Next.js)
 
 **PostgreSQL Database (db)**
 - Image: `postgres:18.1-alpine`
-- Container: `wad-ia06-db`
+- Container: `wad-ia07-db`
 - Database Name: `authen_db`
 - Internal Port: `5432` (not exposed externally)
-- Persistent volume: `wad-ia06-postgres-data`
+- Persistent volume: `postgres_data`
 - Health checks ensure database is ready
 - Credentials: postgres/postgres (configurable)
 
 **Backend API (api)**
-- Container: `wad-ia06-api`
+- Container: `wad-ia07-api`
 - Built from: `./backend/Dockerfile`
 - Node.js: `24.3-alpine`
 - Internal Port: `3001` (accessed via nginx)
@@ -679,7 +729,7 @@ Client → nginx:30080 → web:3000 (Next.js)
 - Non-root user (nestjs:1001)
 
 **Frontend Web (web)**
-- Container: `wad-ia06-web`
+- Container: `wad-ia07-web`
 - Built from: `./frontend/Dockerfile`
 - Node.js: `24.3-alpine`
 - Internal Port: `3000` (accessed via nginx)
@@ -702,7 +752,7 @@ docker compose exec db psql -U postgres -d authen_db
 \d users
 
 # Query users
-SELECT id, email, "createdAt" FROM users;
+SELECT id, name, email, "createdAt" FROM users;
 
 # Exit
 \q
@@ -721,7 +771,7 @@ docker compose exec -T db psql -U postgres -d authen_db < backup.sql
 ### Network Configuration
 
 **Custom Network:**
-- Name: `wad-ia06-network`
+- Name: `app-network`
 - Driver: `bridge`
 - Allows service-to-service communication using hostnames
 
@@ -788,7 +838,7 @@ docker compose exec -T db psql -U postgres -d authen_db < backup.sql
 
 ## 🤝 Contributing
 
-This is an academic project (IA06 assignment). For improvements or suggestions, please contact the project maintainer.
+This is an academic project (IA07 assignment). For improvements or suggestions, please contact the project maintainer.
 
 ## 📄 License
 
@@ -797,7 +847,7 @@ This project is for educational purposes as part of Web Application Development 
 ## 👨‍💻 Author
 
 **HCMUS - Web Application Development Course**  
-Year 4, Semester 1 - Assignment IA06
+Year 4, Semester 1 - Assignment IA07
 
 ## 🆘 Troubleshooting
 
